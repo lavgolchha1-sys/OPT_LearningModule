@@ -1,0 +1,75 @@
+name: Daily OPT Digest
+
+on:
+  schedule:
+    # 6:00 AM IST = 00:30 UTC (you're in Mumbai, IST = UTC+5:30)
+    # Cron uses UTC. To send at 06:00 IST, schedule at 00:30 UTC.
+    - cron: '30 0 * * *'
+  workflow_dispatch:  # allows manual runs from the Actions tab
+    inputs:
+      mode:
+        description: 'Run mode'
+        required: true
+        default: 'digest'
+        type: choice
+        options:
+          - digest
+          - onboarding
+          - alert
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.0'
+          use-public-rspm: true
+
+      - name: Cache R packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-${{ hashFiles('.github/workflows/digest.yml') }}
+          restore-keys: ${{ runner.os }}-r-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev
+
+      - name: Install R packages
+        run: |
+          install.packages(c(
+            "httr2", "jsonlite", "dplyr", "rlang",
+            "googlesheets4", "gargle",
+            "tidyRSS", "xml2",
+            "ellmer"
+          ), repos = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")
+        shell: Rscript {0}
+
+      - name: Write service account JSON from secret
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service-account.json
+          chmod 600 service-account.json
+
+      - name: Run digest pipeline
+        env:
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          SERVICE_ACCOUNT_JSON: service-account.json
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          DIGEST_EMAIL: ${{ secrets.DIGEST_EMAIL }}
+        run: Rscript R/email_digest.R ${{ inputs.mode || 'digest' }}
+
+      - name: Cleanup
+        if: always()
+        run: rm -f service-account.json
