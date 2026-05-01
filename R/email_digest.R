@@ -21,9 +21,9 @@ source("R/dedup.R")
 source("R/prompt.R")
 source("R/score_items.R")
 
-RESEND_API_KEY  <- "re_7pMB9Dkm_LPWrT7fGCJigsJp8tAu3sUP3"
+RESEND_API_KEY <- Sys.getenv("RESEND_API_KEY", "")
 RESEND_FROM     <- "OPT Digest <onboarding@resend.dev>"
-DIGEST_TO       <- "lav.golchha1@gmail.com"
+DIGEST_TO       <- Sys.getenv("DIGEST_TO", "")
 RESEND_API_URL  <- "https://api.resend.com/emails"
 
 TOP_N <- 15
