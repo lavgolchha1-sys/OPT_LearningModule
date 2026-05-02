@@ -56,7 +56,7 @@ jobs:
 
       - name: Write service account JSON from secret
         run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service-account.json
+          echo '${{ secrets.SERVICE_ACCOUNT }}' > service-account.json
           chmod 600 service-account.json
 
       - name: Run digest pipeline
