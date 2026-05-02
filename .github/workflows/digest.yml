@@ -2,9 +2,10 @@ name: Daily OPT Digest
 
 on:
   schedule:
-    # 06:00 IST = 00:30 UTC (Mumbai is UTC+5:30)
+    # 6:00 AM IST = 00:30 UTC (you're in Mumbai, IST = UTC+5:30)
+    # Cron uses UTC. To send at 06:00 IST, schedule at 00:30 UTC.
     - cron: '30 0 * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # allows manual runs from the Actions tab
     inputs:
       mode:
         description: 'Run mode'
@@ -15,9 +16,6 @@ on:
           - digest
           - onboarding
           - alert
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   send-digest:
@@ -44,33 +42,33 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libxml2-dev \
-            libfontconfig1-dev \
-            libharfbuzz-dev \
-            libfribidi-dev
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev
 
       - name: Install R packages
         run: |
           install.packages(c(
             "httr2", "jsonlite", "dplyr", "rlang",
             "googlesheets4", "gargle",
-            "tidyRSS", "xml2", "ellmer"
+            "tidyRSS", "xml2",
+            "ellmer"
           ), repos = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")
         shell: Rscript {0}
+
+      - name: Write service account JSON from secret
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service-account.json
+          chmod 600 service-account.json
 
       - name: Run digest pipeline
         env:
           GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM: ${{ secrets.RESEND_FROM }}
           DIGEST_EMAIL: ${{ secrets.DIGEST_EMAIL }}
-        run: Rscript send_digest.R
+        run: Rscript R/email_digest.R ${{ inputs.mode || 'digest' }}
 
       - name: Cleanup
         if: always()
