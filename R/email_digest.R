@@ -21,9 +21,9 @@ source("R/dedup.R")
 source("R/prompt.R")
 source("R/score_items.R")
 
-RESEND_API_KEY <- Sys.getenv("RESEND_API_KEY", "")
+RESEND_API_KEY <- ${{ secrets.RESEND_API_KEY }}
 RESEND_FROM     <- "OPT Digest <onboarding@resend.dev>"
-DIGEST_TO       <- Sys.getenv("DIGEST_TO", "")
+DIGEST_TO       <- ${{ secrets.DIGEST_EMAIL }}
 RESEND_API_URL  <- "https://api.resend.com/emails"
 
 TOP_N <- 15
