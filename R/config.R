@@ -4,7 +4,7 @@ library(gargle)
 
 # --- Configuration via environment variables ---
 SPREADSHEET_ID       <- "1_wwAk_3njHXef5WNVDb7KcF0ZSItwKxeua27jSspzMA"
-SERVICE_ACCOUNT_JSON <- "service-account.json"
+SERVICE_ACCOUNT_JSON <- ${{ secrets.SERVICE_ACCOUNT }}
 
 if (!nzchar(SPREADSHEET_ID)) {
   stop("GOOGLE_SHEET_ID env var not set. Add it to .env or your shell environment.")
