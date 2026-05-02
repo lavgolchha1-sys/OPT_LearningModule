@@ -3,7 +3,7 @@ library(httr2)
 library(jsonlite)
 library(rlang)  # for %||%
 
-YOUTUBE_API_KEY    <- Syst.getenv("YOUTUBE_API_KEY","")
+YOUTUBE_API_KEY    <- ${{ secrets.YOUTUBE_API_KEY }}
 YOUTUBE_SEARCH_URL <- "https://www.googleapis.com/youtube/v3/search"
 LOOKBACK_HOURS_YT  <- 168  # 7 days
 
